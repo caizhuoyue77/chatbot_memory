@@ -6,6 +6,9 @@ MOONSHOT_MODEL = "moonshot-v1-8k"
 DEEPSEEK_API_KEY = ""
 DEEPSEEK_MODEL = "deepseek-chat"
 
+# VLM
+MOONSHOT_VLM_MODEL = "moonshot-v1-8k-vision-preview"
+
 # prompts
 MEM_EXTRACTION_PROMPT = """
 请你帮我提取这句话中需要长期记住的重要信息。
@@ -49,3 +52,7 @@ ROLEPLAY_PROMPT = "请你扮演一个小狗狗和我说话，注意语气可爱�
 UNIVERSAL_ROLEPLAY_PROMPT = "说话简洁直接，在20个字以内。"
 
 MEMORY_USE_PROMPT = "以下是我们已知有关用户的信息，仅供你回复时参考。但若与当前对话场景关系不大，请你忽略参考信息。\n信息如下："
+
+# VLM Prompts
+VLM_SYSTEM_PROMPT = "你是一个图像理解助手"
+VLM_USER_PROMPT = "请描述图片的内容。"

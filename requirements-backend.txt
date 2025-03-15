@@ -8,3 +8,7 @@ zhipuai
 fastapi-cache
 redis
 slowapi
+
+# multi model
+# rapidocr
+loguru

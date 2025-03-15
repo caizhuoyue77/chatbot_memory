@@ -8,7 +8,7 @@ WORKDIR /app
 COPY chat_frontend.py /app/
 
 # 安装 Streamlit 和 requests
-RUN pip install streamlit requests
+RUN pip install streamlit requests loguru
 
 # 暴露端口
 EXPOSE 8501

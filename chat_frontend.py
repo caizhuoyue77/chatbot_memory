@@ -1,9 +1,14 @@
 import requests
 import streamlit as st
 import logging
-
+import base64
 # 配置日志
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+
+##
+# from mylogger import logger
+from loguru import logger
+##
 
 # 设置标题和描述
 st.title("💬 你的喜好我都记得")
@@ -55,12 +60,15 @@ if "memories" not in st.session_state:
     st.session_state["memories"] = get_memories()
 if "mem_changed" not in st.session_state:
     st.session_state["mem_changed"] = False
+if "cached_images" not in st.session_state:
+    st.session_state["cached_images"] = []
 
 # 显示侧边栏的输入选项和记忆
 with st.sidebar:
     st.subheader("设置")
     chat_model = st.selectbox("对话模型", ["moonshot-v1-8k", "deepseek-chat"])
     memory_model = st.selectbox("记忆抽取模型", ["moonshot-v1-8k", "deepseek-chat"])
+    vlm_model = st.selectbox("图像描述模型", ["moonshot-v1-8k-vision-preview"])
     role_prompt = st.text_area("人设", "请你扮演一个小狗狗和我说话，注意语气可爱、亲密，叫我“主人”，喜欢用emoji", height=100)
     top_k = st.number_input("记忆召回Top K", min_value=1, max_value=5, step=1, value=3)
     memory_threshold = st.number_input("输入记忆阈值", min_value=0.0, max_value=1.0, step=0.01, value=0.6)
@@ -81,14 +89,33 @@ with st.sidebar:
 for msg in st.session_state.messages:
     st.chat_message(msg["role"]).write(msg["content"])
 
+# 添加图片上传组件 by jcj（调整到聊天输入下方）
+
+uploaded_images = st.file_uploader("上传图片（支持PNG）",
+                                   type=["png"],
+                                   key="image_uploader",
+                                   accept_multiple_files=True)
+logger.info(f"准备处理上传的图片约为: {len(uploaded_images)}")
+# 缓存新上传的图片（移除数量限制）
+if uploaded_images:
+    # 将新图片加入缓存并记录日志
+    new_images = [base64.b64encode(img.getvalue()).decode('utf-8') for img in uploaded_images]
+    st.session_state.cached_images = new_images
+    logging.info(f"新增 {len(new_images)} 张图片，当前缓存总数：{len(st.session_state.cached_images)}")
+
 # 用户输入
 if prompt := st.chat_input():
+
     # 输入验证
     if not prompt or len(prompt) > 1000:
         error_msg = "输入不能为空或超过1000字符"
         logging.error(error_msg)
         st.error(error_msg)
         st.stop()  # 停止后续代码执行
+
+    # 记录并发送所有缓存图片
+    # logger.info(f"准备发送 {len(image_bytes_list)} 张图片到后端")  # 添加日志记录
+
 
     logging.info(f"用户输入: {prompt}")
     st.session_state["mem_changed"] = False  # 重置记忆更新状态
@@ -107,9 +134,12 @@ if prompt := st.chat_input():
                 "memory_model": memory_model,
                 "role_prompt": role_prompt,
                 "memory_threshold": memory_threshold,
-                "top_k": top_k
+                "top_k": top_k,
+                "image_bytes_list": st.session_state.cached_images,
+                "vlm_model": vlm_model
             }
-            logging.info(f"正在向后端发送请求: {request_data}")
+
+            logging.info(f"正在向后端发送请求。")
 
             response = requests.post(
                 "http://backend:8000/chat",

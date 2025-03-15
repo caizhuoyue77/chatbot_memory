@@ -21,10 +21,12 @@ COPY requirements-backend.txt /app/
 RUN pip install --no-cache-dir -r requirements-backend.txt
 
 # 安装新增的依赖
-RUN pip install fastapi-cache redis slowapi numpy
+RUN pip install fastapi-cache redis slowapi numpy loguru
 
 # 暴露端口（假设 FastAPI 默认运行在 8000 端口）
 EXPOSE 8000
 
 # 启动命令
 CMD ["uvicorn", "chat:app", "--host", "0.0.0.0", "--port", "8000"]
+
+# uvicorn chat:app --host 0.0.0.0 --port 8000
